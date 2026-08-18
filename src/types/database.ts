@@ -1,5 +1,8 @@
 // Tipos escritos a mano reflejando supabase/migrations/0001_init.sql.
-// Una vez que el proyecto de Supabase esté creado, se pueden regenerar automáticamente
+// Sigue la forma exacta que espera @supabase/supabase-js (Row/Insert/Update/
+// Relationships por tabla, + Views/Functions/Enums/CompositeTypes en el schema) —
+// sin esto, la inferencia de tipos de las queries colapsa a "never" silenciosamente.
+// Una vez que el proyecto de Supabase esté creado, se puede regenerar automáticamente
 // con: npx supabase gen types typescript --project-id <tu-project-id> > src/types/database.ts
 
 export type Role = "inspector" | "referente";
@@ -16,6 +19,8 @@ export interface Gases {
   co: number;
   h2s: number;
 }
+
+type NoRelationships = { Relationships: [] };
 
 export interface Database {
   public: {
@@ -36,7 +41,7 @@ export interface Database {
           full_name: string;
           role: Role;
         }>;
-      };
+      } & NoRelationships;
       permisos: {
         Row: {
           id: string;
@@ -77,11 +82,45 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<Database["public"]["Tables"]["permisos"]["Row"]> & {
+        Insert: {
+          id?: string;
           inspector_id: string;
+          obra?: string;
+          tarea?: string;
+          tipo_permiso?: TipoPermiso | null;
+          es_espacio_confinado?: boolean;
+          solicitante_contratista?: string;
+          num_permiso?: string;
+          num_cpt?: string;
+          sertronic_personal?: EstadoSertronic;
+          sertronic_vehiculos?: EstadoSertronic;
+          sertronic_maquinaria?: EstadoSertronic;
+          gases?: Gases;
+          gases_ultima_verificacion?: string | null;
+          cpt_checked?: boolean;
+          firma_inspector_m1?: boolean;
+          m1_enviado_at?: string | null;
+          m1_habilitado_por_referente_at?: string | null;
+          eq_nombre_deteccion?: string;
+          eq_calibracion_vigente?: boolean;
+          eq_acopio?: boolean;
+          eq_clima?: boolean;
+          cateo_360?: boolean;
+          eq_delimitacion?: boolean;
+          prof_plan?: number;
+          entibado_aplica?: EntibadoAplica | null;
+          chk_vigia?: boolean;
+          chk_escape?: boolean;
+          chk_no_madera?: boolean;
+          chk_entibado_instalado?: boolean;
+          chk_vallas?: boolean;
+          chk_arnes?: boolean;
+          maquinaria_paralela?: boolean;
+          omision_stop_mecanico_autorizada?: boolean;
+          status?: EstadoPermiso;
         };
-        Update: Partial<Database["public"]["Tables"]["permisos"]["Row"]>;
-      };
+        Update: Partial<Database["public"]["Tables"]["permisos"]["Insert"]>;
+      } & NoRelationships;
       evidencias: {
         Row: {
           id: string;
@@ -96,7 +135,7 @@ export interface Database {
           storage_path: string;
         };
         Update: Partial<{ storage_path: string }>;
-      };
+      } & NoRelationships;
       interferencias: {
         Row: {
           id: string;
@@ -111,7 +150,7 @@ export interface Database {
           profundidad: number;
         };
         Update: Partial<{ tipo: string; profundidad: number }>;
-      };
+      } & NoRelationships;
       tokens_omision: {
         Row: {
           id: string;
@@ -130,7 +169,7 @@ export interface Database {
           generado_por: string;
         };
         Update: Partial<{ usado_at: string; usado_por: string }>;
-      };
+      } & NoRelationships;
       notificaciones: {
         Row: {
           id: string;
@@ -146,7 +185,11 @@ export interface Database {
           mensaje: string;
         };
         Update: Partial<{ leida: boolean }>;
-      };
+      } & NoRelationships;
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }
