@@ -51,19 +51,25 @@ export default async function PermisoPage({
             Solicitante contratista: {permiso.solicitante_contratista || "sin definir"}
           </p>
 
-          {permiso.m1_habilitado_por_referente_at ? (
-            <p className="text-sm font-medium text-success">
-              ✅ Momento 1 completo y Momento 2 habilitado. (Momento 2 todavía se está construyendo.)
-            </p>
+          {permiso.status === "autorizado" ? (
+            <p className="text-sm font-medium text-success">🚀 Excavación autorizada. Reporte generado.</p>
+          ) : permiso.m1_habilitado_por_referente_at ? (
+            <p className="text-sm font-medium text-success">✅ Momento 1 completo y Momento 2 habilitado.</p>
           ) : permiso.m1_enviado_at ? (
             <p className="text-sm text-muted-foreground">
               Momento 1 enviado, esperando habilitación del Referente para pasar a Momento 2.
             </p>
           ) : null}
 
-          <Button render={<Link href={`/permisos/${permiso.id}/momento1`} />} className="w-full">
-            {permiso.m1_enviado_at ? "Continuar en Momento 1" : "Ir a Momento 1 →"}
-          </Button>
+          {permiso.m1_habilitado_por_referente_at ? (
+            <Button render={<Link href={`/permisos/${permiso.id}/momento2`} />} className="w-full">
+              {permiso.status === "autorizado" ? "Ver Momento 2" : "Ir a Momento 2 →"}
+            </Button>
+          ) : (
+            <Button render={<Link href={`/permisos/${permiso.id}/momento1`} />} className="w-full">
+              {permiso.m1_enviado_at ? "Continuar en Momento 1" : "Ir a Momento 1 →"}
+            </Button>
+          )}
           <Button render={<Link href="/" />} variant="outline" className="w-full">
             Volver al inicio
           </Button>

@@ -355,7 +355,7 @@ export function Momento1Form({
       )}
 
       {habilitado ? (
-        <Button type="button" size="lg" className="w-full" render={<Link href={`/permisos/${permiso.id}`} />}>
+        <Button type="button" size="lg" className="w-full" render={<Link href={`/permisos/${permiso.id}/momento2`} />}>
           Siguiente →
         </Button>
       ) : (
