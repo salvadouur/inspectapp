@@ -5,6 +5,7 @@ import { HeaderBar } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ReferentePanel } from "./referente-panel";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -23,7 +24,7 @@ export default async function Home() {
 
   const esInspector = profile?.role !== "referente";
 
-  const { data: permisos } = esInspector
+  const { data: permisosInspector } = esInspector
     ? await supabase
         .from("permisos")
         .select("id, obra, tarea, tipo_permiso, status")
@@ -31,8 +32,45 @@ export default async function Home() {
         .order("created_at", { ascending: false })
     : { data: null };
 
+  let notificaciones: { id: string; tipo: "momento1" | "desvio" | "reporte"; mensaje: string; created_at: string }[] = [];
+  let permisosReferente: Array<{
+    id: string;
+    obra: string;
+    tarea: string;
+    tipo_permiso: "Frío" | "Caliente" | null;
+    status: "en_progreso" | "autorizado";
+    inspector_id: string;
+    m1_enviado_at: string | null;
+    m1_habilitado_por_referente_at: string | null;
+    inspectorName: string;
+  }> = [];
+
+  if (!esInspector) {
+    const [{ data: notifs }, { data: permisos }] = await Promise.all([
+      supabase.from("notificaciones").select("id, tipo, mensaje, created_at").order("created_at", { ascending: false }).limit(30),
+      supabase
+        .from("permisos")
+        .select("id, obra, tarea, tipo_permiso, status, inspector_id, m1_enviado_at, m1_habilitado_por_referente_at")
+        .order("created_at", { ascending: false })
+        .limit(30),
+    ]);
+    notificaciones = notifs ?? [];
+
+    const inspectorIds = [...new Set((permisos ?? []).map((p) => p.inspector_id))];
+    const { data: inspectorProfiles } =
+      inspectorIds.length > 0
+        ? await supabase.from("profiles").select("id, full_name").in("id", inspectorIds)
+        : { data: [] };
+    const nombreMap = new Map((inspectorProfiles ?? []).map((p) => [p.id, p.full_name]));
+
+    permisosReferente = (permisos ?? []).map((p) => ({
+      ...p,
+      inspectorName: nombreMap.get(p.inspector_id) || "—",
+    }));
+  }
+
   return (
-    <div className="mx-auto flex min-h-svh max-w-md flex-col justify-center px-4 py-10">
+    <div className={`mx-auto flex min-h-svh flex-col justify-center px-4 py-10 ${esInspector ? "max-w-md" : "max-w-2xl"}`}>
       <HeaderBar />
 
       <Card>
@@ -56,10 +94,10 @@ export default async function Home() {
             </Button>
           )}
 
-          {esInspector && permisos && permisos.length > 0 && (
+          {esInspector && permisosInspector && permisosInspector.length > 0 && (
             <div className="space-y-2">
               <p className="text-sm font-medium">Inspecciones en curso</p>
-              {permisos.map((permiso) => (
+              {permisosInspector.map((permiso) => (
                 <Link
                   key={permiso.id}
                   href={`/permisos/${permiso.id}`}
@@ -77,10 +115,7 @@ export default async function Home() {
           )}
 
           {!esInspector && (
-            <p className="text-sm text-muted-foreground">
-              El panel del Referente (notificaciones, habilitación de Momento 2) todavía se está
-              construyendo.
-            </p>
+            <ReferentePanel notificacionesIniciales={notificaciones} permisos={permisosReferente} />
           )}
 
           <form action={logout}>

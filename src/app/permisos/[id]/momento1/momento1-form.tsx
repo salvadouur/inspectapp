@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,8 @@ import { GasCountdown } from "@/components/gas-countdown";
 import { SertronicToggle } from "@/components/sertronic-toggle";
 import { EvidenceUploader, type EvidenciaInicial } from "@/components/evidence-uploader";
 import { evaluarGases, evaluarSertronic, requiereGases, GAS_RECHECK_INTERVAL_SECONDS } from "@/lib/rules";
-import { registrarVerificacionGases, enviarMomento1, habilitarBypassDemo } from "@/lib/momento1-actions";
+import { registrarVerificacionGases, enviarMomento1 } from "@/lib/momento1-actions";
+import { createClient } from "@/lib/supabase/client";
 import type { EstadoSertronic, Gases, TipoEvidencia, TipoPermiso } from "@/types/database";
 
 interface PermisoMomento1 {
@@ -66,7 +67,30 @@ export function Momento1Form({
 
   const [pendingGases, startGasesTransition] = useTransition();
   const [pendingEnviar, startEnviarTransition] = useTransition();
-  const [pendingBypass, startBypassTransition] = useTransition();
+
+  // Realtime: si el Referente habilita el Momento 2 desde otro dispositivo, esta
+  // pantalla se desbloquea sola sin que el Inspector tenga que recargar.
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`permiso-${permiso.id}-momento1`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "permisos", filter: `id=eq.${permiso.id}` },
+        (payload) => {
+          const nuevo = payload.new as { m1_habilitado_por_referente_at: string | null };
+          if (nuevo.m1_habilitado_por_referente_at) {
+            setHabilitado(true);
+            toast.success("El Referente habilitó el paso a Momento 2.");
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [permiso.id]);
 
   const requiereGasesFlag = requiereGases(permiso.tipo_permiso, permiso.es_espacio_confinado);
   const { bloqueado: bloqueoSertronic, detalle: detalleSertronic } = evaluarSertronic(
@@ -117,19 +141,6 @@ export function Momento1Form({
         toast.success("Momento 1 enviado al Referente.");
       } else {
         toast.error(res.error);
-      }
-    });
-  }
-
-  function handleBypass() {
-    startBypassTransition(async () => {
-      const res = await habilitarBypassDemo(permiso.id);
-      if (res.ok) {
-        setEnviado(true);
-        setHabilitado(true);
-        toast.success("Momento 2 habilitado (modo demo).");
-      } else {
-        toast.error("No se pudo habilitar Momento 2.");
       }
     });
   }
@@ -339,20 +350,6 @@ export function Momento1Form({
           <p className="text-sm font-medium text-success">✅ Momento 2 habilitado por el Referente.</p>
         )}
       </div>
-
-      {m1Listo && !habilitado && (
-        <details className="rounded-lg border p-4 text-sm">
-          <summary className="cursor-pointer font-medium">🛠️ Modo demo (temporal)</summary>
-          <p className="mt-2 text-muted-foreground">
-            Cada dispositivo abre una sesión independiente, así que el Referente en otro celular no puede
-            habilitar este Momento 2 todavía (el Panel del Referente con Realtime está en construcción).
-            Este atajo es solo para seguir probando el flujo completo desde un solo dispositivo.
-          </p>
-          <Button type="button" variant="outline" className="mt-3" onClick={handleBypass} disabled={pendingBypass}>
-            Forzar habilitación de Momento 2 (sin Referente)
-          </Button>
-        </details>
-      )}
 
       {habilitado ? (
         <Button type="button" size="lg" className="w-full" render={<Link href={`/permisos/${permiso.id}/momento2`} />}>

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { evaluarZanja, generarToken, type ZanjaInput } from "@/lib/rules";
+import { evaluarZanja, type ZanjaInput } from "@/lib/rules";
 import type { EntibadoAplica } from "@/types/database";
 
 export async function agregarInterferencia(permisoId: string, tipo: string, profundidad: number) {
@@ -24,28 +24,6 @@ export async function quitarInterferencia(interferenciaId: string, permisoId: st
   if (error) return { ok: false as const, error: error.message };
   revalidatePath(`/permisos/${permisoId}/momento2`);
   return { ok: true as const };
-}
-
-// Genera el token en nombre del Referente. Temporal: hasta que exista el Panel del
-// Referente (con Realtime), el propio Inspector lo dispara para poder seguir probando
-// el flujo de Omisión Autorizada desde un solo dispositivo.
-export async function generarTokenDemo(permisoId: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false as const, error: "No autenticado." };
-
-  const token = generarToken();
-  const { error } = await supabase.from("tokens_omision").insert({
-    permiso_id: permisoId,
-    token,
-    motivo: "Excavación a menos de 1.00 m del ducto — Stop Mecánico",
-    generado_por: user.id,
-  });
-
-  if (error) return { ok: false as const, error: error.message };
-  return { ok: true as const, token };
 }
 
 export async function validarTokenOmision(permisoId: string, codigo: string) {

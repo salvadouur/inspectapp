@@ -75,26 +75,3 @@ export async function enviarMomento1(
   revalidatePath(`/permisos/${permisoId}/momento1`);
   return { ok: true as const };
 }
-
-// Atajo temporal: hasta que el Panel del Referente (con Realtime) exista, esto permite
-// seguir probando el flujo completo desde un solo dispositivo.
-export async function habilitarBypassDemo(permisoId: string) {
-  const supabase = await createClient();
-  const { data: actual } = await supabase
-    .from("permisos")
-    .select("m1_enviado_at")
-    .eq("id", permisoId)
-    .single();
-
-  const { error } = await supabase
-    .from("permisos")
-    .update({
-      m1_habilitado_por_referente_at: new Date().toISOString(),
-      ...(actual?.m1_enviado_at ? {} : { m1_enviado_at: new Date().toISOString() }),
-    })
-    .eq("id", permisoId);
-
-  if (error) return { ok: false as const, error: error.message };
-  revalidatePath(`/permisos/${permisoId}/momento1`);
-  return { ok: true as const };
-}

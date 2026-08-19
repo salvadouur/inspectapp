@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,10 +13,10 @@ import { evaluarZanja } from "@/lib/rules";
 import {
   agregarInterferencia,
   quitarInterferencia,
-  generarTokenDemo,
   validarTokenOmision,
   generarReporteLiberacion,
 } from "@/lib/momento2-actions";
+import { createClient } from "@/lib/supabase/client";
 import type { EntibadoAplica, EstadoPermiso } from "@/types/database";
 
 interface Interferencia {
@@ -77,12 +77,31 @@ export function Momento2Form({
   const [excavacionProxima, setExcavacionProxima] = useState<"no" | "si">("no");
   const [omisionAutorizada, setOmisionAutorizada] = useState(permiso.omision_stop_mecanico_autorizada);
   const [tokenInput, setTokenInput] = useState("");
-  const [tokenDemo, setTokenDemo] = useState<string | null>(null);
   const [autorizado, setAutorizado] = useState(permiso.status === "autorizado");
 
   const [pendingInterf, startInterfTransition] = useTransition();
   const [pendingToken, startTokenTransition] = useTransition();
   const [pendingReporte, startReporteTransition] = useTransition();
+
+  // Realtime: si el Referente genera un token de Omisión Autorizada desde su Panel,
+  // avisamos al Inspector para que sepa que ya lo puede pedir por teléfono.
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`permiso-${permiso.id}-tokens`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "tokens_omision", filter: `permiso_id=eq.${permiso.id}` },
+        () => {
+          toast.info("El Referente generó un nuevo token de Omisión Autorizada.");
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [permiso.id]);
 
   const profundidadCritica = profPlan > 1.2;
 
@@ -135,23 +154,11 @@ export function Momento2Form({
     });
   }
 
-  function handleGenerarTokenDemo() {
-    startTokenTransition(async () => {
-      const res = await generarTokenDemo(permiso.id);
-      if (res.ok) {
-        setTokenDemo(res.token);
-      } else {
-        toast.error("No se pudo generar el token de prueba.");
-      }
-    });
-  }
-
   function handleValidarToken() {
     startTokenTransition(async () => {
       const res = await validarTokenOmision(permiso.id, tokenInput.trim());
       if (res.ok) {
         setOmisionAutorizada(true);
-        setTokenDemo(null);
         toast.success("Omisión Autorizada validada.");
       } else {
         toast.error(res.error);
@@ -413,20 +420,6 @@ export function Momento2Form({
                     Validar
                   </Button>
                 </div>
-
-                <details className="rounded-lg border p-3 text-sm">
-                  <summary className="cursor-pointer font-medium">🛠️ Modo demo (temporal)</summary>
-                  <p className="mt-2 text-muted-foreground">
-                    Hasta que exista el Panel del Referente, generá acá el token que en producción te dictaría el
-                    Referente por teléfono.
-                  </p>
-                  <Button type="button" variant="outline" size="sm" className="mt-2" disabled={pendingToken} onClick={handleGenerarTokenDemo}>
-                    Generar token de prueba
-                  </Button>
-                  {tokenDemo && (
-                    <p className="mt-2 font-mono text-base font-bold text-primary">Token: {tokenDemo}</p>
-                  )}
-                </details>
               </>
             )}
           </div>
