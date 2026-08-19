@@ -43,6 +43,9 @@
   --color-brand-amber-foreground: var(--brand-amber-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-destructive-border: var(--destructive-border);
+  --color-destructive-bg: var(--destructive-bg);
+  --color-destructive-alert-foreground: var(--destructive-alert-foreground);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -71,6 +74,9 @@
   --accent: #e2e8f0;
   --accent-foreground: #0f172a;
   --destructive: #dc2626;
+  --destructive-border: #7f1d1d;
+  --destructive-bg: rgba(220, 38, 38, 0.14);
+  --destructive-alert-foreground: #7f1d1d;
   --border: #b9c4d0;
   --input: #b9c4d0;
   --ring: #1e3a5f;
