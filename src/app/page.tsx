@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/lib/auth-actions";
 import { HeaderBar } from "@/components/logo";
@@ -20,6 +21,16 @@ export default async function Home() {
     .eq("id", user.id)
     .single();
 
+  const esInspector = profile?.role !== "referente";
+
+  const { data: permisos } = esInspector
+    ? await supabase
+        .from("permisos")
+        .select("id, obra, tarea, tipo_permiso, status")
+        .eq("inspector_id", user.id)
+        .order("created_at", { ascending: false })
+    : { data: null };
+
   return (
     <div className="mx-auto flex min-h-svh max-w-md flex-col justify-center px-4 py-10">
       <HeaderBar />
@@ -38,10 +49,40 @@ export default async function Home() {
               {profile?.role ?? "sin definir"}
             </Badge>
           </p>
-          <p className="text-sm text-muted-foreground">
-            La autenticación real ya está funcionando — falta construir el resto de las
-            pantallas (Configuración de Obra, Momento 1, Momento 2, Panel del Referente).
-          </p>
+
+          {esInspector && (
+            <Button render={<Link href="/permisos/nuevo" />} size="lg" className="w-full">
+              + Nueva inspección
+            </Button>
+          )}
+
+          {esInspector && permisos && permisos.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Inspecciones en curso</p>
+              {permisos.map((permiso) => (
+                <Link
+                  key={permiso.id}
+                  href={`/permisos/${permiso.id}`}
+                  className="flex items-center justify-between rounded-lg border p-3 text-sm hover:bg-accent"
+                >
+                  <span>
+                    {permiso.obra} — {permiso.tarea}
+                  </span>
+                  <Badge variant="secondary">
+                    {permiso.status === "autorizado" ? "Autorizado" : "En progreso"}
+                  </Badge>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {!esInspector && (
+            <p className="text-sm text-muted-foreground">
+              El panel del Referente (notificaciones, habilitación de Momento 2) todavía se está
+              construyendo.
+            </p>
+          )}
+
           <form action={logout}>
             <Button type="submit" variant="outline" className="w-full">
               Cerrar sesión

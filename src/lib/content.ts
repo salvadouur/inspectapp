@@ -31,3 +31,5 @@ export const COLORES_ESTACADO: Array<[string, string]> = [
 
 export const TAREAS_DISPONIBLES = ["Excavación"];
 export const TAREAS_PROXIMAMENTE = ["Izaje", "Trabajos en Altura", "Soldadura"];
+
+export const ESTACIONES = ["Medanito", "Allen", "Crucero Catriel", "Puerto Rosales"];
