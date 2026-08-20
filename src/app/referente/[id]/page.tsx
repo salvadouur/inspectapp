@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { HeaderBar } from "@/components/logo";
+import { PageNav } from "@/components/page-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReferenteDetalle } from "./referente-detalle";
 import type { TipoEvidencia } from "@/types/database";
@@ -69,6 +70,7 @@ export default async function ReferenteDetallePage({
   return (
     <div className="mx-auto flex min-h-svh max-w-2xl flex-col justify-center px-4 py-10">
       <HeaderBar />
+      <PageNav backHref="/" backLabel="Volver al inicio" />
 
       <Card>
         <CardHeader>

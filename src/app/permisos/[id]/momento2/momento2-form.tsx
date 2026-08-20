@@ -13,6 +13,7 @@ import { evaluarZanja } from "@/lib/rules";
 import {
   agregarInterferencia,
   quitarInterferencia,
+  solicitarTokenOmision,
   validarTokenOmision,
   generarReporteLiberacion,
 } from "@/lib/momento2-actions";
@@ -77,10 +78,12 @@ export function Momento2Form({
   const [excavacionProxima, setExcavacionProxima] = useState<"no" | "si">("no");
   const [omisionAutorizada, setOmisionAutorizada] = useState(permiso.omision_stop_mecanico_autorizada);
   const [tokenInput, setTokenInput] = useState("");
+  const [solicitudEnviada, setSolicitudEnviada] = useState(false);
   const [autorizado, setAutorizado] = useState(permiso.status === "autorizado");
 
   const [pendingInterf, startInterfTransition] = useTransition();
   const [pendingToken, startTokenTransition] = useTransition();
+  const [pendingSolicitud, startSolicitudTransition] = useTransition();
   const [pendingReporte, startReporteTransition] = useTransition();
 
   // Realtime: si el Referente genera un token de Omisión Autorizada desde su Panel,
@@ -150,6 +153,18 @@ export function Momento2Form({
         setInterferencias((list) => list.filter((i) => i.id !== id));
       } else {
         toast.error("No se pudo quitar la interferencia.");
+      }
+    });
+  }
+
+  function handleSolicitarToken() {
+    startSolicitudTransition(async () => {
+      const res = await solicitarTokenOmision(permiso.id);
+      if (res.ok) {
+        setSolicitudEnviada(true);
+        toast.success("Se avisó al Referente. Esperá que te dicte el token por teléfono.");
+      } else {
+        toast.error("No se pudo avisar al Referente.");
       }
     });
   }
@@ -406,9 +421,18 @@ export function Momento2Form({
             ) : (
               <>
                 <p className="text-xs text-muted-foreground">
-                  Comunicate con el Referente de Proyecto y pedile el token de autorización desde su Panel. El
-                  Referente evalúa la situación y te dicta un código de 4 dígitos.
+                  Pedile al Referente que te genere un token de autorización desde su Panel — te va a dictar un
+                  código de 4 dígitos.
                 </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={pendingSolicitud || solicitudEnviada}
+                  onClick={handleSolicitarToken}
+                >
+                  🔔 {solicitudEnviada ? "Solicitud enviada" : "Solicitar token al Referente"}
+                </Button>
                 <div className="flex gap-2">
                   <Input
                     placeholder="Token de Omisión Autorizada"

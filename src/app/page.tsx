@@ -3,8 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/lib/auth-actions";
 import { HeaderBar } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { NotificationBell } from "@/components/notification-bell";
 import { ReferentePanel } from "./referente-panel";
 
 export default async function Home() {
@@ -76,6 +77,11 @@ export default async function Home() {
       <Card>
         <CardHeader>
           <CardTitle>Sesión iniciada</CardTitle>
+          {!esInspector && (
+            <CardAction>
+              <NotificationBell notificacionesIniciales={notificaciones} />
+            </CardAction>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           <p>
@@ -114,9 +120,7 @@ export default async function Home() {
             </div>
           )}
 
-          {!esInspector && (
-            <ReferentePanel notificacionesIniciales={notificaciones} permisos={permisosReferente} />
-          )}
+          {!esInspector && <ReferentePanel permisos={permisosReferente} />}
 
           <form action={logout}>
             <Button type="submit" variant="outline" className="w-full">

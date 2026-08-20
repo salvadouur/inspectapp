@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { HeaderBar } from "@/components/logo";
+import { PageNav } from "@/components/page-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ConfigObraForm } from "./config-obra-form";
@@ -27,6 +28,7 @@ export default async function NuevoPermisoPage({
   return (
     <div className="mx-auto flex min-h-svh max-w-2xl flex-col justify-center px-4 py-10">
       <HeaderBar />
+      <PageNav backHref="/" backLabel="Volver al inicio" />
 
       <Card>
         <CardHeader>

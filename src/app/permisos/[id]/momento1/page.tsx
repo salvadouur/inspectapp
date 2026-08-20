@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { HeaderBar } from "@/components/logo";
+import { PageNav } from "@/components/page-nav";
 import { Stepper } from "@/components/stepper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Momento1Form } from "./momento1-form";
@@ -60,6 +61,7 @@ export default async function Momento1Page({
   return (
     <div className="mx-auto flex min-h-svh max-w-2xl flex-col justify-center px-4 py-10">
       <HeaderBar />
+      <PageNav backHref={`/permisos/${id}`} backLabel="Volver" />
       <Stepper current={2} />
 
       <Card>

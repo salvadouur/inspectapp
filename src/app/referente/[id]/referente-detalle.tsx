@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { habilitarMomento2, generarTokenReferente } from "@/lib/referente-actions";
-import type { EstadoPermiso, TipoEvidencia, TipoPermiso } from "@/types/database";
+import { createClient } from "@/lib/supabase/client";
+import type { EstadoPermiso, TipoEvidencia, TipoNotificacion, TipoPermiso } from "@/types/database";
 import type { EvidenciaInicial } from "@/components/evidence-uploader";
+
+const COOLDOWN_MS = 60_000;
 
 const EVIDENCIAS: Array<{ tipo: TipoEvidencia; label: string }> = [
   { tipo: "charla", label: "Charla 5 min" },
@@ -48,6 +51,40 @@ export function ReferenteDetalle({
   const [tokens, setTokens] = useState(tokensIniciales);
   const [pendingHabilitar, startHabilitarTransition] = useTransition();
   const [pendingToken, startTokenTransition] = useTransition();
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
+  const [solicitudPendiente, setSolicitudPendiente] = useState(false);
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Realtime: si el Inspector pide un token de Omisión Autorizada, avisamos acá al toque.
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`referente-${permiso.id}-notificaciones`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notificaciones", filter: `permiso_id=eq.${permiso.id}` },
+        (payload) => {
+          const n = payload.new as { tipo: TipoNotificacion; mensaje: string };
+          if (n.tipo === "desvio" && n.mensaje.toLowerCase().includes("solicita token")) {
+            setSolicitudPendiente(true);
+            toast.info("El Inspector solicita un token de Omisión Autorizada.");
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [permiso.id]);
+
+  const cooldownRestanteMs = Math.max(0, cooldownUntil - now);
+  const enCooldown = cooldownRestanteMs > 0;
 
   function handleHabilitar() {
     startHabilitarTransition(async () => {
@@ -62,6 +99,7 @@ export function ReferenteDetalle({
   }
 
   function handleGenerarToken() {
+    if (enCooldown) return;
     startTokenTransition(async () => {
       const res = await generarTokenReferente(permiso.id);
       if (res.ok) {
@@ -69,6 +107,8 @@ export function ReferenteDetalle({
           { id: crypto.randomUUID(), token: res.token, motivo: "Excavación a menos de 1.00 m del ducto — Stop Mecánico", generado_at: new Date().toISOString(), usado_at: null },
           ...list,
         ]);
+        setCooldownUntil(Date.now() + COOLDOWN_MS);
+        setSolicitudPendiente(false);
         toast.success(`Token generado: ${res.token}. Dictáselo al Inspector por teléfono.`);
       } else {
         toast.error("No se pudo generar el token.");
@@ -137,11 +177,16 @@ export function ReferenteDetalle({
           Evaluá la situación con el Inspector y, si corresponde, generá un token de 4 dígitos para dictarle
           por teléfono.
         </p>
+        {solicitudPendiente && (
+          <p className="text-sm font-medium text-brand-amber">
+            🔔 El Inspector solicitó un token — todavía no generaste ninguno.
+          </p>
+        )}
         {tokenActivo && (
           <p className="text-sm font-medium text-brand-amber">Token activo sin usar: {tokenActivo.token}</p>
         )}
-        <Button type="button" variant="outline" onClick={handleGenerarToken} disabled={pendingToken}>
-          🔑 Generar nuevo token
+        <Button type="button" variant="outline" onClick={handleGenerarToken} disabled={pendingToken || enCooldown}>
+          🔑 {enCooldown ? `Podés generar otro en ${Math.ceil(cooldownRestanteMs / 1000)}s` : "Generar nuevo token"}
         </Button>
 
         {historial.length > 0 && (

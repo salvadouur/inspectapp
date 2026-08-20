@@ -2,10 +2,12 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { HeaderBar } from "@/components/logo";
+import { PageNav } from "@/components/page-nav";
 import { Stepper } from "@/components/stepper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EliminarPermisoButton } from "./eliminar-permiso-button";
 
 export default async function PermisoPage({
   params,
@@ -23,7 +25,7 @@ export default async function PermisoPage({
   const { data: permiso } = await supabase
     .from("permisos")
     .select(
-      "id, obra, tarea, tipo_permiso, es_espacio_confinado, solicitante_contratista, status, m1_enviado_at, m1_habilitado_por_referente_at",
+      "id, obra, tarea, tipo_permiso, es_espacio_confinado, solicitante_contratista, status, inspector_id, m1_enviado_at, m1_habilitado_por_referente_at",
     )
     .eq("id", id)
     .single();
@@ -35,6 +37,7 @@ export default async function PermisoPage({
   return (
     <div className="mx-auto flex min-h-svh max-w-2xl flex-col justify-center px-4 py-10">
       <HeaderBar />
+      <PageNav backHref="/" backLabel="Volver al inicio" />
       <Stepper current={step as 1 | 2 | 3} />
 
       <Card>
@@ -73,6 +76,7 @@ export default async function PermisoPage({
           <Button render={<Link href="/" />} variant="outline" className="w-full">
             Volver al inicio
           </Button>
+          {user.id === permiso.inspector_id && <EliminarPermisoButton permisoId={permiso.id} />}
         </CardContent>
       </Card>
     </div>

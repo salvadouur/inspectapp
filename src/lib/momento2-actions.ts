@@ -26,6 +26,24 @@ export async function quitarInterferencia(interferenciaId: string, permisoId: st
   return { ok: true as const };
 }
 
+export async function solicitarTokenOmision(permisoId: string) {
+  const supabase = await createClient();
+  const { data: permiso } = await supabase
+    .from("permisos")
+    .select("obra, tarea")
+    .eq("id", permisoId)
+    .single();
+
+  const { error } = await supabase.from("notificaciones").insert({
+    permiso_id: permisoId,
+    tipo: "desvio",
+    mensaje: `Se solicita token de Omisión Autorizada en ${permiso?.obra ?? "obra"} (${permiso?.tarea ?? "tarea"}).`,
+  });
+
+  if (error) return { ok: false as const, error: error.message };
+  return { ok: true as const };
+}
+
 export async function validarTokenOmision(permisoId: string, codigo: string) {
   const supabase = await createClient();
   const {

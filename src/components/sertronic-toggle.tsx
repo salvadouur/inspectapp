@@ -21,19 +21,27 @@ export function SertronicToggle({
           type="button"
           size="sm"
           variant="outline"
-          className={cn(value === "Verde" && "border-success bg-success text-success-foreground hover:bg-success/90")}
+          aria-label="Habilitado"
+          className={cn(
+            "text-lg",
+            value === "Verde" && "border-success bg-success text-success-foreground hover:bg-success/90",
+          )}
           onClick={() => onChange("Verde")}
         >
-          ✅ Habilitado
+          ✅
         </Button>
         <Button
           type="button"
           size="sm"
           variant="outline"
-          className={cn(value === "Rojo" && "border-destructive bg-destructive text-white hover:bg-destructive/90")}
+          aria-label="No habilitado"
+          className={cn(
+            "text-lg",
+            value === "Rojo" && "border-destructive bg-destructive text-white hover:bg-destructive/90",
+          )}
           onClick={() => onChange("Rojo")}
         >
-          🛑 No Habilitado
+          🛑
         </Button>
       </div>
     </div>

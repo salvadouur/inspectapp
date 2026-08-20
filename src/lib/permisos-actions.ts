@@ -46,3 +46,16 @@ export async function crearPermiso(formData: FormData) {
 
   redirect(`/permisos/${data.id}`);
 }
+
+export async function eliminarPermiso(permisoId: string) {
+  const supabase = await createClient();
+
+  const { data: files } = await supabase.storage.from("evidencias").list(permisoId);
+  if (files && files.length > 0) {
+    await supabase.storage.from("evidencias").remove(files.map((f) => `${permisoId}/${f.name}`));
+  }
+
+  const { error } = await supabase.from("permisos").delete().eq("id", permisoId);
+  if (error) return { ok: false as const, error: error.message };
+  return { ok: true as const };
+}
