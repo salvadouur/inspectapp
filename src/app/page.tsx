@@ -107,9 +107,9 @@ export default async function Home() {
                 <Link
                   key={permiso.id}
                   href={`/permisos/${permiso.id}`}
-                  className="flex items-center justify-between rounded-lg border p-3 text-sm hover:bg-accent"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 text-sm hover:bg-accent"
                 >
-                  <span>
+                  <span className="min-w-0 break-words">
                     {permiso.obra} — {permiso.tarea}
                   </span>
                   <Badge variant="secondary">

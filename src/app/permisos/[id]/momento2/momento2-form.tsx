@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -248,8 +249,8 @@ export function Momento2Form({
         <div className="border-t pt-4 space-y-2">
           <p className="font-medium">Interferencias identificadas</p>
           {interferencias.map((interf) => (
-            <div key={interf.id} className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm">
-              <span>🔧 {interf.tipo}</span>
+            <div key={interf.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border px-3 py-2 text-sm">
+              <span className="min-w-0 break-words">🔧 {interf.tipo}</span>
               <span className="text-muted-foreground">Profundidad real: {interf.profundidad.toFixed(2)} m</span>
               <Button
                 type="button"
@@ -452,7 +453,12 @@ export function Momento2Form({
 
       <div className="rounded-lg border p-4 space-y-3">
         {autorizado ? (
-          <p className="text-sm font-medium text-success">🚀 ¡EXCAVACIÓN AUTORIZADA! Reporte generado.</p>
+          <>
+            <p className="text-sm font-medium text-success">🚀 ¡EXCAVACIÓN AUTORIZADA! Reporte generado.</p>
+            <Button type="button" size="lg" className="h-14 w-full text-lg" render={<Link href="/" />}>
+              Finalizar
+            </Button>
+          </>
         ) : m2Listo ? (
           <>
             <p className="text-sm font-medium text-success">🚀 ¡EXCAVACIÓN AUTORIZADA!</p>

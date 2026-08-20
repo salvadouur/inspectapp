@@ -39,14 +39,14 @@ export default async function Momento2Page({
   return (
     <div className="mx-auto flex min-h-svh max-w-2xl flex-col justify-center px-4 py-10">
       <HeaderBar />
-      <PageNav backHref={`/permisos/${id}/momento1`} backLabel="Volver a Momento 1" />
-      <Stepper current={3} />
 
       <Card>
         <CardHeader>
+          <PageNav backHref={`/permisos/${id}/momento1`} backLabel="Volver a Momento 1" />
           <CardTitle>Momento 2 — Inspección Operativa en Campo</CardTitle>
         </CardHeader>
         <CardContent>
+          <Stepper current={3} />
           {!permiso.m1_habilitado_por_referente_at ? (
             <Alert variant="destructive">
               <AlertDescription>

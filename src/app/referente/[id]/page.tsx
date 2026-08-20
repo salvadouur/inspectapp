@@ -70,10 +70,10 @@ export default async function ReferenteDetallePage({
   return (
     <div className="mx-auto flex min-h-svh max-w-2xl flex-col justify-center px-4 py-10">
       <HeaderBar />
-      <PageNav backHref="/" backLabel="Volver al inicio" />
 
       <Card>
         <CardHeader>
+          <PageNav backHref="/" backLabel="Volver al inicio" />
           <CardTitle>{permiso.obra} — {permiso.tarea}</CardTitle>
         </CardHeader>
         <CardContent>

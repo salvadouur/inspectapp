@@ -28,9 +28,9 @@ export function ReferentePanel({ permisos }: { permisos: PermisoConInspector[] }
             <Link
               key={p.id}
               href={`/referente/${p.id}`}
-              className="flex items-center justify-between rounded-lg border p-3 text-sm hover:bg-accent"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 text-sm hover:bg-accent"
             >
-              <span>
+              <span className="min-w-0 break-words">
                 {p.obra} — {p.tarea} <span className="text-muted-foreground">({p.inspectorName})</span>
               </span>
               <Badge>{p.tipo_permiso}</Badge>
@@ -48,9 +48,9 @@ export function ReferentePanel({ permisos }: { permisos: PermisoConInspector[] }
             <Link
               key={p.id}
               href={`/referente/${p.id}`}
-              className="flex items-center justify-between rounded-lg border p-3 text-sm hover:bg-accent"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 text-sm hover:bg-accent"
             >
-              <span>
+              <span className="min-w-0 break-words">
                 {p.obra} — {p.tarea} <span className="text-muted-foreground">({p.inspectorName})</span>
               </span>
               <Badge variant="secondary">{p.status === "autorizado" ? "Autorizado" : "En progreso"}</Badge>

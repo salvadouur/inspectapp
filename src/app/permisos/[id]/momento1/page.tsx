@@ -61,14 +61,14 @@ export default async function Momento1Page({
   return (
     <div className="mx-auto flex min-h-svh max-w-2xl flex-col justify-center px-4 py-10">
       <HeaderBar />
-      <PageNav backHref={`/permisos/${id}`} backLabel="Volver" />
-      <Stepper current={2} />
 
       <Card>
         <CardHeader>
+          <PageNav backHref={`/permisos/${id}`} backLabel="Volver" />
           <CardTitle>Momento 1 — Verificación Documental</CardTitle>
         </CardHeader>
         <CardContent>
+          <Stepper current={2} />
           <Momento1Form permiso={permiso} evidenciasIniciales={evidenciasIniciales} />
         </CardContent>
       </Card>

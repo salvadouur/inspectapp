@@ -37,14 +37,14 @@ export default async function PermisoPage({
   return (
     <div className="mx-auto flex min-h-svh max-w-2xl flex-col justify-center px-4 py-10">
       <HeaderBar />
-      <PageNav backHref="/" backLabel="Volver al inicio" />
-      <Stepper current={step as 1 | 2 | 3} />
 
       <Card>
         <CardHeader>
+          <PageNav backHref="/" backLabel="Volver al inicio" />
           <CardTitle>{permiso.obra} — {permiso.tarea}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <Stepper current={step as 1 | 2 | 3} />
           <div className="flex flex-wrap items-center gap-2">
             <Badge>{permiso.tipo_permiso}</Badge>
             {permiso.es_espacio_confinado && <Badge variant="secondary">Espacio confinado</Badge>}
@@ -73,9 +73,6 @@ export default async function PermisoPage({
               {permiso.m1_enviado_at ? "Continuar en Momento 1" : "Ir a Momento 1 →"}
             </Button>
           )}
-          <Button render={<Link href="/" />} variant="outline" className="w-full">
-            Volver al inicio
-          </Button>
           {user.id === permiso.inspector_id && <EliminarPermisoButton permisoId={permiso.id} />}
         </CardContent>
       </Card>
