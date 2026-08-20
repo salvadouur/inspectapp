@@ -133,7 +133,7 @@ export function ConfigObraForm({ inspectorName }: { inspectorName: string }) {
         )}
       </div>
 
-      <Button type="submit" size="lg" className="w-full" disabled={!listoParaAvanzar}>
+      <Button type="submit" size="lg" className="h-14 w-full text-lg" disabled={!listoParaAvanzar}>
         Siguiente →
       </Button>
     </form>

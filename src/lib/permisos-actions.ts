@@ -55,7 +55,13 @@ export async function eliminarPermiso(permisoId: string) {
     await supabase.storage.from("evidencias").remove(files.map((f) => `${permisoId}/${f.name}`));
   }
 
-  const { error } = await supabase.from("permisos").delete().eq("id", permisoId);
+  const { data: borrados, error } = await supabase.from("permisos").delete().eq("id", permisoId).select("id");
   if (error) return { ok: false as const, error: error.message };
+  if (!borrados || borrados.length === 0) {
+    return {
+      ok: false as const,
+      error: "No se borró nada — puede que falte aplicar la migración de permisos en Supabase, o que la inspección no te pertenezca.",
+    };
+  }
   return { ok: true as const };
 }

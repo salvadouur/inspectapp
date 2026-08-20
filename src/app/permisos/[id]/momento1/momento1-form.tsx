@@ -352,11 +352,16 @@ export function Momento1Form({
       </div>
 
       {habilitado ? (
-        <Button type="button" size="lg" className="w-full" render={<Link href={`/permisos/${permiso.id}/momento2`} />}>
+        <Button
+          type="button"
+          size="lg"
+          className="h-14 w-full text-lg"
+          render={<Link href={`/permisos/${permiso.id}/momento2`} />}
+        >
           Siguiente →
         </Button>
       ) : (
-        <Button type="button" size="lg" className="w-full" disabled>
+        <Button type="button" size="lg" className="h-14 w-full text-lg" disabled>
           Siguiente →
         </Button>
       )}

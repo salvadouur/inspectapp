@@ -26,9 +26,10 @@ export function EliminarPermisoButton({ permisoId }: { permisoId: string }) {
       const res = await eliminarPermiso(permisoId);
       if (res.ok) {
         toast.success("Inspección eliminada.");
+        setOpen(false);
         router.push("/");
       } else {
-        toast.error("No se pudo eliminar la inspección.");
+        toast.error(res.error);
       }
     });
   }
