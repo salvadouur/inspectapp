@@ -5,10 +5,30 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { habilitarMomento2, generarTokenReferente } from "@/lib/referente-actions";
 import { createClient } from "@/lib/supabase/client";
 import type { EstadoPermiso, TipoEvidencia, TipoNotificacion, TipoPermiso } from "@/types/database";
 import type { EvidenciaInicial } from "@/components/evidence-uploader";
+
+function CopyTokenButton({ token }: { token: string }) {
+  const [copiado, setCopiado] = useState(false);
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={async () => {
+        await navigator.clipboard.writeText(token);
+        setCopiado(true);
+        toast.success("Token copiado.");
+        setTimeout(() => setCopiado(false), 1500);
+      }}
+    >
+      {copiado ? "✅ Copiado" : "📋 Copiar"}
+    </Button>
+  );
+}
 
 const COOLDOWN_MS = 60_000;
 
@@ -54,6 +74,7 @@ export function ReferenteDetalle({
   const [cooldownUntil, setCooldownUntil] = useState(0);
   const [now, setNow] = useState(() => Date.now());
   const [solicitudPendiente, setSolicitudPendiente] = useState(false);
+  const [imagenAmpliada, setImagenAmpliada] = useState<{ url: string; label: string } | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -141,14 +162,20 @@ export function ReferenteDetalle({
                 return (
                   <div key={tipo} className="space-y-1">
                     {ev?.signedUrl ? (
-                      <Image
-                        src={ev.signedUrl}
-                        alt={label}
-                        width={150}
-                        height={100}
-                        unoptimized
-                        className="h-20 w-full rounded-md border object-cover"
-                      />
+                      <button
+                        type="button"
+                        onClick={() => setImagenAmpliada({ url: ev.signedUrl!, label })}
+                        className="block w-full"
+                      >
+                        <Image
+                          src={ev.signedUrl}
+                          alt={label}
+                          width={150}
+                          height={100}
+                          unoptimized
+                          className="h-20 w-full rounded-md border object-cover"
+                        />
+                      </button>
                     ) : (
                       <div className="flex h-20 items-center justify-center rounded-md border text-xs text-muted-foreground">
                         Sin adjuntar
@@ -183,7 +210,10 @@ export function ReferenteDetalle({
           </p>
         )}
         {tokenActivo && (
-          <p className="text-sm font-medium text-brand-amber">Token activo sin usar: {tokenActivo.token}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-medium text-brand-amber">Token activo sin usar: {tokenActivo.token}</p>
+            <CopyTokenButton token={tokenActivo.token} />
+          </div>
         )}
         <Button type="button" variant="outline" onClick={handleGenerarToken} disabled={pendingToken || enCooldown}>
           🔑 {enCooldown ? `Podés generar otro en ${Math.ceil(cooldownRestanteMs / 1000)}s` : "Generar nuevo token"}
@@ -200,6 +230,22 @@ export function ReferenteDetalle({
           </div>
         )}
       </div>
+
+      <Dialog open={!!imagenAmpliada} onOpenChange={(o) => !o && setImagenAmpliada(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogTitle>{imagenAmpliada?.label}</DialogTitle>
+          {imagenAmpliada && (
+            <Image
+              src={imagenAmpliada.url}
+              alt={imagenAmpliada.label}
+              width={800}
+              height={600}
+              unoptimized
+              className="h-auto max-h-[75vh] w-full rounded-md object-contain"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

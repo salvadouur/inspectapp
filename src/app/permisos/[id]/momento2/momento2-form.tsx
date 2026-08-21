@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import {
   quitarInterferencia,
   solicitarTokenOmision,
   validarTokenOmision,
+  guardarProgresoMomento2,
   generarReporteLiberacion,
 } from "@/lib/momento2-actions";
 import { createClient } from "@/lib/supabase/client";
@@ -86,6 +87,57 @@ export function Momento2Form({
   const [pendingToken, startTokenTransition] = useTransition();
   const [pendingSolicitud, startSolicitudTransition] = useTransition();
   const [pendingReporte, startReporteTransition] = useTransition();
+  const [guardadoEn, setGuardadoEn] = useState<number | null>(null);
+
+  // Autosave: sin esto, todo lo que el Inspector va tipeando/tildando en Momento 2 se
+  // perdía si recargaba la página (p.ej. al volver de llamar al Referente por el token).
+  // Antes solo se guardaba al final, cuando ya estaban resueltos todos los bloqueos.
+  const primerRender = useRef(true);
+  useEffect(() => {
+    if (primerRender.current) {
+      primerRender.current = false;
+      return;
+    }
+    const id = setTimeout(() => {
+      guardarProgresoMomento2(permiso.id, {
+        eqNombreDeteccion,
+        eqCalibracionVigente,
+        cateo360,
+        eqAcopio,
+        eqClima,
+        eqDelimitacion,
+        profPlan,
+        entibadoAplica: profundidadCritica ? (entibadoAplica || null) : null,
+        chkVigia,
+        chkEscape,
+        chkNoMadera,
+        chkEntibadoInstalado,
+        chkVallas,
+        chkArnes,
+        maquinariaParalela,
+      }).then((res) => {
+        if (res.ok) setGuardadoEn(Date.now());
+      });
+    }, 800);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    eqNombreDeteccion,
+    eqCalibracionVigente,
+    cateo360,
+    eqAcopio,
+    eqClima,
+    eqDelimitacion,
+    profPlan,
+    entibadoAplica,
+    chkVigia,
+    chkEscape,
+    chkNoMadera,
+    chkEntibadoInstalado,
+    chkVallas,
+    chkArnes,
+    maquinariaParalela,
+  ]);
 
   // Realtime: si el Referente genera un token de Omisión Autorizada desde su Panel,
   // avisamos al Inspector para que sepa que ya lo puede pedir por teléfono.
@@ -213,6 +265,8 @@ export function Momento2Form({
 
   return (
     <div className="space-y-6">
+      {guardadoEn && <p className="text-right text-xs text-muted-foreground">✓ Cambios guardados</p>}
+
       <div className="rounded-lg border p-4 space-y-4">
         <p className="font-medium">Equipamiento e Interferencias</p>
         <div className="grid gap-4 sm:grid-cols-2">

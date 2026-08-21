@@ -85,6 +85,54 @@ export async function validarTokenOmision(permisoId: string, codigo: string) {
   return { ok: true as const };
 }
 
+export interface ProgresoMomento2Input {
+  eqNombreDeteccion: string;
+  eqCalibracionVigente: boolean;
+  cateo360: boolean;
+  eqAcopio: boolean;
+  eqClima: boolean;
+  eqDelimitacion: boolean;
+  profPlan: number;
+  entibadoAplica: EntibadoAplica | null;
+  chkVigia: boolean;
+  chkEscape: boolean;
+  chkNoMadera: boolean;
+  chkEntibadoInstalado: boolean;
+  chkVallas: boolean;
+  chkArnes: boolean;
+  maquinariaParalela: boolean;
+}
+
+// Autosave: Momento 2 tiene muchos campos y el Inspector suele tener que salir de la
+// app (p.ej. para llamar al Referente y pedir el token) — sin esto, cualquier recarga
+// de la pestaña perdía todo lo tipeado porque antes solo se guardaba en el submit final.
+export async function guardarProgresoMomento2(permisoId: string, input: ProgresoMomento2Input) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("permisos")
+    .update({
+      eq_nombre_deteccion: input.eqNombreDeteccion,
+      eq_calibracion_vigente: input.eqCalibracionVigente,
+      eq_acopio: input.eqAcopio,
+      eq_clima: input.eqClima,
+      cateo_360: input.cateo360,
+      eq_delimitacion: input.eqDelimitacion,
+      prof_plan: input.profPlan,
+      entibado_aplica: input.entibadoAplica,
+      chk_vigia: input.chkVigia,
+      chk_escape: input.chkEscape,
+      chk_no_madera: input.chkNoMadera,
+      chk_entibado_instalado: input.chkEntibadoInstalado,
+      chk_vallas: input.chkVallas,
+      chk_arnes: input.chkArnes,
+      maquinaria_paralela: input.maquinariaParalela,
+    })
+    .eq("id", permisoId);
+
+  if (error) return { ok: false as const, error: error.message };
+  return { ok: true as const };
+}
+
 export interface ReporteLiberacionInput {
   eqNombreDeteccion: string;
   eqCalibracionVigente: boolean;

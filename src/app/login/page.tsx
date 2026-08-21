@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { login } from "@/lib/auth-actions";
 import { HeaderBar } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -53,13 +52,6 @@ export default async function LoginPage({
               Ingresar
             </Button>
           </form>
-
-          <p className="text-center text-sm text-muted-foreground">
-            ¿No tenés cuenta?{" "}
-            <Link href="/signup" className="font-medium text-primary underline underline-offset-4">
-              Registrate
-            </Link>
-          </p>
         </CardContent>
       </Card>
     </div>

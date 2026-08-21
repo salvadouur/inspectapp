@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { marcarNotificacionesLeidas } from "@/lib/notificaciones-actions";
 import type { TipoNotificacion } from "@/types/database";
 
 interface Notificacion {
@@ -11,6 +12,7 @@ interface Notificacion {
   tipo: TipoNotificacion;
   mensaje: string;
   created_at: string;
+  leida: boolean;
 }
 
 const ICONOS: Record<TipoNotificacion, string> = {
@@ -19,11 +21,15 @@ const ICONOS: Record<TipoNotificacion, string> = {
   reporte: "📄",
 };
 
+function formatHora(iso: string) {
+  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
 export function NotificationBell({ notificacionesIniciales }: { notificacionesIniciales: Notificacion[] }) {
   const [notificaciones, setNotificaciones] = useState(notificacionesIniciales);
   const [open, setOpen] = useState(false);
-  const [vistas, setVistas] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const [, startTransition] = useTransition();
 
   useEffect(() => {
     const supabase = createClient();
@@ -31,7 +37,6 @@ export function NotificationBell({ notificacionesIniciales }: { notificacionesIn
       .channel("panel-referente-notificaciones")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "notificaciones" }, (payload) => {
         setNotificaciones((list) => [payload.new as Notificacion, ...list]);
-        setVistas(false);
       })
       .subscribe();
 
@@ -48,17 +53,27 @@ export function NotificationBell({ notificacionesIniciales }: { notificacionesIn
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const sinLeer = vistas ? 0 : notificaciones.length;
+  const sinLeer = notificaciones.filter((n) => !n.leida).length;
+
+  function handleOpen() {
+    const yaAbierto = open;
+    setOpen((o) => !o);
+    if (yaAbierto) return;
+
+    const noLeidas = notificaciones.filter((n) => !n.leida).map((n) => n.id);
+    if (noLeidas.length === 0) return;
+    setNotificaciones((list) => list.map((n) => (noLeidas.includes(n.id) ? { ...n, leida: true } : n)));
+    startTransition(async () => {
+      await marcarNotificacionesLeidas(noLeidas);
+    });
+  }
 
   return (
     <div ref={ref} className="relative">
       <button
         type="button"
         aria-label="Notificaciones"
-        onClick={() => {
-          setOpen((o) => !o);
-          setVistas(true);
-        }}
+        onClick={handleOpen}
         className="relative flex size-9 items-center justify-center rounded-full border text-lg hover:bg-accent"
       >
         🔔
@@ -82,8 +97,8 @@ export function NotificationBell({ notificacionesIniciales }: { notificacionesIn
             <div className="max-h-80 space-y-1.5 overflow-y-auto">
               {notificaciones.slice(0, 20).map((n) => (
                 <p key={n.id} className="text-sm">
-                  <span className="text-muted-foreground">{new Date(n.created_at).toLocaleTimeString()} —</span>{" "}
-                  {ICONOS[n.tipo]} {n.mensaje}
+                  <span className="text-muted-foreground">{formatHora(n.created_at)} —</span> {ICONOS[n.tipo]}{" "}
+                  {n.mensaje}
                 </p>
               ))}
             </div>

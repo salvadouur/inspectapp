@@ -33,7 +33,13 @@ export default async function Home() {
         .order("created_at", { ascending: false })
     : { data: null };
 
-  let notificaciones: { id: string; tipo: "momento1" | "desvio" | "reporte"; mensaje: string; created_at: string }[] = [];
+  let notificaciones: {
+    id: string;
+    tipo: "momento1" | "desvio" | "reporte";
+    mensaje: string;
+    created_at: string;
+    leida: boolean;
+  }[] = [];
   let permisosReferente: Array<{
     id: string;
     obra: string;
@@ -48,7 +54,11 @@ export default async function Home() {
 
   if (!esInspector) {
     const [{ data: notifs }, { data: permisos }] = await Promise.all([
-      supabase.from("notificaciones").select("id, tipo, mensaje, created_at").order("created_at", { ascending: false }).limit(30),
+      supabase
+        .from("notificaciones")
+        .select("id, tipo, mensaje, created_at, leida")
+        .order("created_at", { ascending: false })
+        .limit(30),
       supabase
         .from("permisos")
         .select("id, obra, tarea, tipo_permiso, status, inspector_id, m1_enviado_at, m1_habilitado_por_referente_at")
