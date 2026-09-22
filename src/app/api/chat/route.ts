@@ -60,7 +60,8 @@ export async function POST(request: Request) {
       })),
       config: {
         systemInstruction: CHAT_SYSTEM_PROMPT,
-        maxOutputTokens: 500,
+        maxOutputTokens: 800,
+        thinkingConfig: { thinkingBudget: 0 },
       },
     });
 
