@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { CHAT_SYSTEM_PROMPT } from "@/lib/chat-system-prompt";
@@ -20,9 +20,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No autenticado." }, { status: 401 });
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json(
-      { error: "Falta configurar ANTHROPIC_API_KEY en el servidor." },
+      { error: "Falta configurar GEMINI_API_KEY en el servidor." },
       { status: 500 },
     );
   }
@@ -49,20 +49,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Faltan mensajes." }, { status: 400 });
   }
 
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
   try {
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-5",
-      max_tokens: 500,
-      system: CHAT_SYSTEM_PROMPT,
-      messages: safeMessages,
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: safeMessages.map((m) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      })),
+      config: {
+        systemInstruction: CHAT_SYSTEM_PROMPT,
+        maxOutputTokens: 500,
+      },
     });
 
-    const text = response.content
-      .filter((block) => block.type === "text")
-      .map((block) => block.text)
-      .join("\n");
+    const text = response.text;
 
     return NextResponse.json({ reply: text || "No pude generar una respuesta, probá de nuevo." });
   } catch {
