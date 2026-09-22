@@ -53,7 +53,7 @@ export async function POST(request: Request) {
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.6-flash",
       contents: safeMessages.map((m) => ({
         role: m.role === "assistant" ? "model" : "user",
         parts: [{ text: m.content }],
@@ -67,7 +67,8 @@ export async function POST(request: Request) {
     const text = response.text;
 
     return NextResponse.json({ reply: text || "No pude generar una respuesta, probá de nuevo." });
-  } catch {
+  } catch (err) {
+    console.error("Error llamando a Gemini:", err);
     return NextResponse.json({ error: "No se pudo contactar al asistente. Probá de nuevo." }, { status: 502 });
   }
 }
